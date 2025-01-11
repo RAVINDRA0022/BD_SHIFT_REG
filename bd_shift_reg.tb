@@ -1,0 +1,72 @@
+`timescale 1ns / 1ps
+
+module BD_SHIFT_REG_tb;
+
+    // Testbench signals
+    reg dr, dl;               // Data inputs for shift register
+    reg clk, rst;             // Clock and reset signals
+    reg mode;                 // Shift mode: 1 = right, 0 = left
+    wire [3:0] q, qbar;       // Shift register outputs and complementary outputs
+
+    // Instantiate the design under test (DUT)
+    BD_SHIFT_REG dut (
+        .q(q),
+        .qbar(qbar),
+        .dr(dr),
+        .dl(dl),
+        .clk(clk),
+        .rst(rst),
+        .mode(mode)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // Generate clock with a period of 10 ns
+    end
+
+    // Test stimulus
+    initial begin
+        // Initialize inputs
+        dr = 0; dl = 0; mode = 0; rst = 1;
+
+        // Wait for the reset to propagate
+        #10;
+        rst = 0;
+
+        // Test Case 1: Reset behavior
+        $display("[Time: %0t] Applying reset", $time);
+        rst = 1;
+        #10;
+        rst = 0;
+
+        // Test Case 2: Left shift operation
+        $display("[Time: %0t] Testing left shift", $time);
+        mode = 0; // Left shift
+        dl = 1; // Data to shift in from the left
+        dr = 0; // Data to shift in from the right
+
+        #10; dl = 0; // Shift 0 into the left
+        #10; dl = 1; // Shift 1 into the left
+
+        // Test Case 3: Right shift operation
+        $display("[Time: %0t] Testing right shift", $time);
+        mode = 1; // Right shift
+        dl = 0;
+        dr = 1; // Data to shift in from the right
+
+        #10; dr = 0; // Shift 0 into the right
+        #10; dr = 1; // Shift 1 into the right
+
+        // End of simulation
+        #50;
+        $finish;
+    end
+
+    // Monitor outputs
+    initial begin
+        $monitor("[Time: %0t] clk = %b, rst = %b, mode = %b, dl = %b, dr = %b, q = %b, qbar = %b",
+                 $time, clk, rst, mode, dl, dr, q, qbar);
+    end
+
+endmodule
